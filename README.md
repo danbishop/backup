@@ -1,1 +1,3 @@
-# backup
+# Backup
+
+Server backup script.
