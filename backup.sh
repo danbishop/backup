@@ -1,6 +1,14 @@
 #!/bin/bash
 
-# Backup Nextcloud
+# Backup SSH Keys/Fingerprints
+if [ ! -d "/mnt/storage/backups/ssh" ]; then
+  mkdir -p /mnt/storage/backups/ssh
+fi
+rsync -a /etc/ssh/ssh_host* /mnt/backups/ssh
+
+
+
+# Backup Nextcloud - TO REVIEW
 nextcloud.export -abc
 mv /var/snap/nextcloud/common/backups/* /mnt/storage/backups/nextcloud
 
