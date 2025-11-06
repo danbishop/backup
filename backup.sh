@@ -60,8 +60,8 @@ cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
 
 # Sync to Proton Drive
 rclone sync /mnt/storage/backups protondrive:/neo-backups
-rclone sync /mnt/storage/immich protondrive:/neo-backups/storage/
-rclone sync /mnt/storage/home protondrive:/neo-backups/storage/
+rclone sync /mnt/storage/immich protondrive:/neo-backups/storage/immich
+rclone sync /mnt/storage/home protondrive:/neo-backups/storage/home
 
 
 # Backup Nextcloud - TO REVIEW
