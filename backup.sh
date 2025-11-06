@@ -14,16 +14,17 @@ if [ ! -d "/mnt/storage/backups/immich" ]; then
   mkdir -p /mnt/storage/backups/immich
 fi
 # Immich automated backups (not from the snap, but from Immich itself)
-rsync -a --delete /var/snap/immich-distribution/common/upload/backups /mnt/storage/backups/immich/
+rsync -a --delete /var/snap/immich-distribution/common/upload/backups /mnt/storage/backups/immich-db/
+# Other immich backups - sort this
+rsync -a --delete /var/snap/immich-distribution/common/upload/backups/ /mnt/storage/backups/immich-db2/
+rsync -a --delete /var/snap/immich-distribution/common/backups /mnt/storage/backups/immich-db3/
 
 # Backup Jellyfin Snap
 if [ ! -d "/mnt/storage/backups/jellyfin" ]; then
   mkdir -p /mnt/storage/backups/jellyfin
 fi
-# Backup all the backups... this is a bit crazy, but for now...
+# Jellyfin db backups
 rsync -a --delete /var/snap/itrue-jellyfin/common/data/data/backups /mnt/storage/backups/jellyfin/
-rsync -a --delete /var/snap/immich-distribution/common/upload/backups/ /mnt/storage/backups/jellyfin/
-rsync -a --delete /var/snap/immich-distribution/common/backups /mnt/storage/backups/jellyfin/
 
 # Backup snaps
 # if [ ! -d "/mnt/storage/backups/snaps" ]; then
@@ -59,6 +60,9 @@ cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
 
 # Sync to Proton Drive
 rclone sync /mnt/storage/backups protondrive:/neo-backups
+rclone sync /mnt/storage/immich protondrive:/neo-backups/storage/
+rclone sync /mnt/storage/home protondrive:/neo-backups/storage/
+
 
 # Backup Nextcloud - TO REVIEW
 # nextcloud.export -abc
