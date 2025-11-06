@@ -52,7 +52,7 @@ rsync -a --delete /var/snap/itrue-jellyfin/common/data/data/backups /mnt/storage
 # rsync -a --delete /var/lib/snapd/snapshots /mnt/storage/backups/snaps/
 
 # Backup Librespot
-if [ ! -d "/mnt/storage/backups/immich" ]; then
+if [ ! -d "/mnt/storage/backups/librespot" ]; then
   mkdir -p /mnt/storage/backups/librespot
 fi
 cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
