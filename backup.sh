@@ -4,7 +4,7 @@
 if [ ! -d "/mnt/storage/backups/ssh" ]; then
   mkdir -p /mnt/storage/backups/ssh
 fi
-rsync -a --delete /etc/ssh/ssh_host* /mnt/backups/ssh
+rsync -a --delete /etc/ssh/ssh_host* /mnt/storage/backups/ssh
 
 # Backup home directories
 
