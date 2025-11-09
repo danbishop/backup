@@ -59,6 +59,26 @@ cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
 
 
 # Sync to Proton Drive
+
+# TEST
+RCLONE_ALLOW_OTHER=true
+RCLONE_BUFFER_SIZE=0M
+RCLONE_STATS=300s
+RCLONE_STATS_ONE_LINE=true
+RCLONE_SYSLOG=true
+RCLONE_ALLOW_NON_EMPTY=true
+RCLONE_UMASK=007
+RCLONE_LOG_LEVEL=INFO
+RCLONE_CACHE_INFO_AGE=60m
+RCLONE_DIR_CACHE_TIME=30m
+RCLONE_VFS_CACHE_MAX_AGE=30m
+RCLONE_VFS_CACHE_POLL_INTERVAL=5m
+RCLONE_VFS_READ_CHUNK_SIZE=200M
+RCLONE_VFS_READ_CHUNK_SIZE_LIMIT=3G
+RCLONE_VFS_CACHE_MODE=full
+RCLONE_ATTR_TIMEOUT=5m 
+
+
 rclone sync /mnt/storage/backups protondrive:/neo-backups
 rclone sync /mnt/storage/immich protondrive:/neo-backups/storage/immich
 rclone sync /mnt/storage/home protondrive:/neo-backups/storage/home
