@@ -59,7 +59,7 @@ create_snapshot() {
             printf "%s%s", $i, (i==NF-2 ? "" : "_")
         }
         print "" 
-    }' | sed 's/[^a-zA-Z0-9-]\+/-/g')
+    }' | sed 's/[^a-zA-Z0-9-_]\+/-/g')
 
   # Export snapshot
   snap export-snapshot $latest_save_id "/mnt/storage/backups/snaps/$snap_name_$export_filename.zip"
