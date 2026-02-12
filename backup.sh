@@ -21,7 +21,7 @@ rsync -a --delete /var/snap/immich-distribution/common/upload/backups/ /mnt/stor
 # Immich backups from the image snap backup system
 rsync -a --delete /var/snap/immich-distribution/common/backups/ /mnt/storage/backups/immich/immich-db-backups
 
-# Backup Jellyfin Snap
+# Backup Jellyfin database
 if [ ! -d "/mnt/storage/backups/jellyfin" ]; then
   mkdir -p /mnt/storage/backups/jellyfin
 fi
@@ -55,10 +55,10 @@ create_snapshot() {
 
   # Get filename for export
   export_filename=$(echo "$snapshot_data" | sort -k3,3 | tail -n 1 | awk '{
-        for(i=1; i<=NF-2; i++) {
-            printf "%s%s", $i, (i==NF-2 ? "" : "_")
-        }
-        print "" 
+      for(i=1; i<=NF-2; i++) {
+        printf "%s%s", $i, (i==NF-2 ? "" : "_")
+      }
+      print "" 
     }' | sed 's/[^a-zA-Z0-9_-]\+/-/g')
 
   # Export snapshot
@@ -100,10 +100,10 @@ snap stop booklore
 create_snapshot "booklore"
 snap start booklore
 
-# Backup Immich Snap
-snap stop immich-distribution
-create_snapshot "immich-distribution"
-snap start immich-distribution
+# Backup Immich Snap - Don't do this... entire photo library is mounted inside the snap
+# snap stop immich-distribution
+# create_snapshot "immich-distribution"
+# snap start immich-distribution
 
 # rsync -a --delete /var/lib/snapd/snapshots /mnt/storage/backups/snaps/
  # Backup Librespot
@@ -111,6 +111,42 @@ if [ ! -d "/mnt/storage/backups/librespot" ]; then
   mkdir -p /mnt/storage/backups/librespot
 fi
 cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
+
+# Cleanup old snap snapshots
+
+# 1. Get a list of all unique snap names that have saved snapshots
+# We skip the header and grab the second column
+snaps=$(snap saved | awk 'NR>1 {print $2}' | sort -u)
+
+for s in $snaps; do
+  echo "Processing snap: $s"
+
+  # 2. Get the snapshot IDs (Set IDs) for this specific snap
+  # We sort them numerically so the newest (highest ID) is at the bottom
+  ids=$(snap saved | awk -v name="$s" '$2 == name {print $1}' | sort -n)
+
+  # 3. Count how many snapshots exist for this snap
+  total=$(echo "$ids" | wc -l)
+
+  if [ "$total" -le 3 ]; then
+    echo "  - only $total snapshots found. Keeping them all."
+    continue
+  fi
+
+  # 4. Determine how many to forget (Total - 3)
+  to_forget_count=$((total - 3))
+  
+  # 5. Grab the oldest IDs to be deleted
+  # 'head' picks from the top (the oldest ones)
+  forget_ids=$(echo "$ids" | head -n "$to_forget_count")
+
+  for id in $forget_ids; do
+    echo "  - forgetting snapshot set $id for $s..."
+    snap forget "$id"
+  done
+done
+
+echo "Cleanup complete."
 
 
 # Sync to Proton Drive
@@ -157,39 +193,3 @@ cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
 
 # # Shutdown backups.danbishop.uk
 # ssh -t backups@backups.danbishop.uk 'sudo shutdown -h now'
-
-# Cleanup snap snapshots
-
-# 1. Get a list of all unique snap names that have saved snapshots
-# We skip the header and grab the second column
-snaps=$(snap saved | awk 'NR>1 {print $2}' | sort -u)
-
-for s in $snaps; do
-    echo "Processing snap: $s"
-
-    # 2. Get the snapshot IDs (Set IDs) for this specific snap
-    # We sort them numerically so the newest (highest ID) is at the bottom
-    ids=$(snap saved | awk -v name="$s" '$2 == name {print $1}' | sort -n)
-
-    # 3. Count how many snapshots exist for this snap
-    total=$(echo "$ids" | wc -l)
-
-    if [ "$total" -le 3 ]; then
-        echo "  - Only $total snapshots found. Keeping all."
-        continue
-    fi
-
-    # 4. Determine how many to forget (Total - 3)
-    to_forget_count=$((total - 3))
-    
-    # 5. Grab the oldest IDs to be deleted
-    # 'head' picks from the top (the oldest ones)
-    forget_ids=$(echo "$ids" | head -n "$to_forget_count")
-
-    for id in $forget_ids; do
-        echo "  - Forgetting snapshot set $id for $s..."
-        snap forget "$id"
-    done
-done
-
-echo "Cleanup complete."
