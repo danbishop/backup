@@ -71,39 +71,39 @@ create_snapshot "sonarr-tak"
 snap start sonarr-tak
 
 # # Backup Radarr Snap
-# snap stop radarr-tak
-# snap save radarr-tak
-# snap start radarr-tak
+snap stop radarr-tak
+create_snapshot "radarr-tak"
+snap start radarr-tak
 
-# # Backup Prowlarr Snap
-# snap stop prowlarr-tak
-# snap save prowlarr-tak
-# snap start prowlarr-tak
+# Backup Prowlarr Snap
+snap stop prowlarr-tak
+create_snapshot "prowlarr-tak"
+snap start prowlarr-tak
 
-# # Backup Lidarr Snap
-# snap stop lidarr-tak
-# snap save lidarr-tak
-# snap start lidarr-tak
+# Backup Lidarr Snap
+snap stop lidarr-tak
+create_snapshot "lidarr-tak"
+snap start lidarr-tak
 
-# # Backup Jellyfin Snap
+# Backup Jellyfin Snap
 # snap stop itrue-jellyfin
-# snap save itrue-jellyfin
+# create_snapshot "itrue-jellyfin"
 # snap start itrue-jellyfin
 
-# # Backup Nextcloud Snap
-# snap stop nextcloud
-# snap save nextcloud
-# snap start nextcloud
+# Backup Nextcloud Snap
+snap stop nextcloud
+create_snapshot "nextcloud"
+snap start nextcloud
 
-# # Backup Booklore Snap
-# snap stop booklore
-# snap save booklore
-# snap start booklore
+# Backup Booklore Snap
+snap stop booklore
+create_snapshot "booklore"
+snap start booklore
 
-# # Backup Immich Snap
-# snap stop immich-distribution
-# snap save immich-distribution
-# snap start immich-distribution
+# Backup Immich Snap
+snap stop immich-distribution
+create_snapshot "immich-distribution"
+snap start immich-distribution
 
 # rsync -a --delete /var/lib/snapd/snapshots /mnt/storage/backups/snaps/
  # Backup Librespot
@@ -157,3 +157,39 @@ cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
 
 # # Shutdown backups.danbishop.uk
 # ssh -t backups@backups.danbishop.uk 'sudo shutdown -h now'
+
+# Cleanup snap snapshots
+
+# 1. Get a list of all unique snap names that have saved snapshots
+# We skip the header and grab the second column
+snaps=$(snap saved | awk 'NR>1 {print $2}' | sort -u)
+
+for s in $snaps; do
+    echo "Processing snap: $s"
+
+    # 2. Get the snapshot IDs (Set IDs) for this specific snap
+    # We sort them numerically so the newest (highest ID) is at the bottom
+    ids=$(snap saved | awk -v name="$s" '$2 == name {print $1}' | sort -n)
+
+    # 3. Count how many snapshots exist for this snap
+    total=$(echo "$ids" | wc -l)
+
+    if [ "$total" -le 3 ]; then
+        echo "  - Only $total snapshots found. Keeping all."
+        continue
+    fi
+
+    # 4. Determine how many to forget (Total - 3)
+    to_forget_count=$((total - 3))
+    
+    # 5. Grab the oldest IDs to be deleted
+    # 'head' picks from the top (the oldest ones)
+    forget_ids=$(echo "$ids" | head -n "$to_forget_count")
+
+    for id in $forget_ids; do
+        echo "  - Forgetting snapshot set $id for $s..."
+        snap forget "$id"
+    done
+done
+
+echo "Cleanup complete."
