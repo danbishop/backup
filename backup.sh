@@ -43,7 +43,7 @@ create_snapshot() {
   fi
 
   snap save $snap_name
-  snapshot_data=$(snap saved --abs-time "$snap_name" | grep $snap_name)
+  snapshot_data=$(snap saved --abs-time "$snap_name" | awk 'NR>1')
   
   # Get latest snapshot ID
   # 1. Sort by the 3rd column (Timestamp)
@@ -59,7 +59,7 @@ create_snapshot() {
             printf "%s%s", $i, (i==NF-2 ? "" : "_")
         }
         print "" 
-    }' | sed 's/[^a-zA-Z0-9-_]\+/-/g')
+    }' | sed 's/[^a-zA-Z0-9_-]\+/-/g')
 
   # Export snapshot
   snap export-snapshot $latest_save_id "/mnt/storage/backups/snaps/$snap_name_$export_filename.zip"
