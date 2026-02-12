@@ -59,16 +59,16 @@ create_snapshot() {
             printf "%s%s", $i, (i==NF-2 ? "" : "_")
         }
         print "" 
-    }')
+    }') sed 's/[^a-zA-Z0-9]\+/-/g'
   echo "$export_filename"
 
   # Export snapshot
-  snap export-snapshot $latest_save_id "/mnt/storage/backups/snaps/$snapname-$export_filename.zip"
+  snap export-snapshot $latest_save_id "/mnt/storage/backups/snaps/$snap_name_$export_filename.zip"
 }
 
 # Backup Sonarr snap
 snap stop sonarr-tak
-create_snapshot(sonarr-tak)
+create_snapshot "sonarr-tak"
 snap start sonarr-tak
 
 # # Backup Radarr Snap
