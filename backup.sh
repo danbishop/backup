@@ -11,13 +11,15 @@ rsync -a --delete /etc/ssh/ssh_host* /mnt/storage/backups/ssh
 
 # Backup Immich database
 if [ ! -d "/mnt/storage/backups/immich" ]; then
-  mkdir -p /mnt/storage/backups/immich
+  mkdir -p /mnt/storage/backups/immich/snap-db-backups
+fi
+if [ ! -d "/mnt/storage/backups/immich" ]; then
+  mkdir -p /mnt/storage/backups/immich/immich-db-backups
 fi
 # Immich automated backups (not from the snap, but from Immich itself)
-rsync -a --delete /var/snap/immich-distribution/common/upload/backups /mnt/storage/backups/immich-db/
-# Other immich backups - sort this
-rsync -a --delete /var/snap/immich-distribution/common/upload/backups/ /mnt/storage/backups/immich-db2/
-rsync -a --delete /var/snap/immich-distribution/common/backups /mnt/storage/backups/immich-db3/
+rsync -a --delete /var/snap/immich-distribution/common/upload/backups/ /mnt/storage/backups/immich/snap-db-backups
+# Immich backups from the image snap backup system
+rsync -a --delete /var/snap/immich-distribution/common/backups/ /mnt/storage/backups/immich/immich-db-backups
 
 # Backup Jellyfin Snap
 if [ ! -d "/mnt/storage/backups/jellyfin" ]; then
@@ -27,31 +29,52 @@ fi
 rsync -a --delete /var/snap/itrue-jellyfin/common/data/data/backups /mnt/storage/backups/jellyfin/
 
 # Backup snaps
-# if [ ! -d "/mnt/storage/backups/snaps" ]; then
-#   mkdir -p /mnt/storage/backups/snaps
-# fi
-# snap stop sonarr-tak
-# snap save sonarr-tak
-# snap start sonarr-tak
+if [ ! -d "/mnt/storage/backups/snaps" ]; then
+  mkdir -p /mnt/storage/backups/snaps
+fi
+
+# Backup Sonarr snap
+snap stop sonarr-tak
+snap save sonarr-tak
+snap start sonarr-tak
 
 # Backup Radarr Snap
-# snap stop radarr-tak
-# snap save radarr-tak
-# snap start radarr-tak
+snap stop radarr-tak
+snap save radarr-tak
+snap start radarr-tak
 
 # Backup Prowlarr Snap
-# snap stop prowlarr-tak
-# snap save prowlarr-tak
-# snap start prowlarr-tak
+snap stop prowlarr-tak
+snap save prowlarr-tak
+snap start prowlarr-tak
 
 # Backup Lidarr Snap
-# snap stop lidarr-tak
-# snap save lidarr-tak
-# snap start lidarr-tak
+snap stop lidarr-tak
+snap save lidarr-tak
+snap start lidarr-tak
 
-# rsync -a --delete /var/lib/snapd/snapshots /mnt/storage/backups/snaps/
+# Backup Jellyfin Snap
+snap stop itrue-jellyfin
+snap save itrue-jellyfin
+snap start itrue-jellyfin
 
-# Backup Librespot
+# Backup Nextcloud Snap
+snap stop nextcloud
+snap save nextcloud
+snap start nextcloud
+
+# Backup Booklore Snap
+snap stop booklore
+snap save booklore
+snap start booklore
+
+# Backup Immich Snap
+snap stop immich-distribution
+snap save immich-distribution
+snap start immich-distribution
+
+rsync -a --delete /var/lib/snapd/snapshots /mnt/storage/backups/snaps/
+ # Backup Librespot
 if [ ! -d "/mnt/storage/backups/librespot" ]; then
   mkdir -p /mnt/storage/backups/librespot
 fi
