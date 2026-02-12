@@ -50,7 +50,7 @@ create_snapshot() {
   # 2. Take the last line
   # 3. Print the 1st column (ID)
   latest_save_id=$(echo "$snapshot_data" | sort -k3,3 | tail -n 1 | awk '{print $1}')
-  echo $latest_save_id
+  echo "Snapshot ID: $latest_save_id"
 
 
   # Get filename for export
@@ -59,8 +59,7 @@ create_snapshot() {
             printf "%s%s", $i, (i==NF-2 ? "" : "_")
         }
         print "" 
-    }') sed 's/[^a-zA-Z0-9]\+/-/g'
-  echo "$export_filename"
+    }' | sed 's/[^a-zA-Z0-9-]\+/-/g')
 
   # Export snapshot
   snap export-snapshot $latest_save_id "/mnt/storage/backups/snaps/$snap_name_$export_filename.zip"
