@@ -148,6 +148,25 @@ done
 
 echo "Cleanup complete."
 
+# Cleanup exported snap backups
+# 1. Get a unique list of service names by:
+#    - Listing .zip files
+#    - Cutting the string at the underscores to get the second field
+#    - Sorting and getting unique values
+snaps=$(ls /mnt/storage/backups/snaps/*.zip | cut -d'_' -f2 | sort | uniq)
+
+echo "Found backups for: $(echo $snaps | xargs)"
+echo "----------------------------------------"
+
+for service in $snaps; do
+    echo "Processing $service..."
+    
+    # List files for this service, sort newest first, skip top 3, delete rest
+    ls -1 /mnt/storage/backups/snaps/*_${service}_*.zip 2>/dev/null | sort -r | tail -n +4 | xargs -I {} rm -v {}
+done
+
+echo "Cleanup complete."
+
 
 # Sync to Proton Drive
 
