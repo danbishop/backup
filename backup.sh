@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Load secrets if the file exists
+if [ -f "/root/secrets" ]; then
+    source "/root/secrets"
+else
+    echo "Error: secrets file not found!"
+    exit 1
+fi
+
 # Backup SSH Keys/Fingerprints
 if [ ! -d "/mnt/storage/backups/ssh" ]; then
   mkdir -p /mnt/storage/backups/ssh
@@ -21,12 +29,36 @@ rsync -a --delete /var/snap/immich-distribution/common/upload/backups/ /mnt/stor
 # Immich backups from the image snap backup system
 rsync -a --delete /var/snap/immich-distribution/common/backups/ /mnt/storage/backups/immich/immich-db-backups
 
+
 # Backup Jellyfin database
+# Trigger Backup
+echo "Starting Jellyfin database backup..."
+
+response=$(curl -s -o /dev/null -w "%{http_code}" \
+    "$JELLYFIN_URL/Backup/Create" \
+    -X POST \
+    -H "Content-Type: application/json" \
+    -H "Authorization: MediaBrowser Token=$JELLYFIN_API_KEY" \
+    -d '{
+        "Metadata": true,
+        "Trickplay": false,
+        "Subtitles": false,
+        "Database": true
+    }')
+
+if [ "$response" == "200" ] || [ "$response" == "204" ]; then
+    echo "Successfully created Jellyfin backup."
+else
+    echo "Failed to trigger Jellyfin backup. HTTP Status: $response"
+fi
+
 if [ ! -d "/mnt/storage/backups/jellyfin" ]; then
   mkdir -p /mnt/storage/backups/jellyfin
 fi
 # Jellyfin db backups
 rsync -a --delete /var/snap/itrue-jellyfin/common/data/data/backups /mnt/storage/backups/jellyfin/
+
+
 
 # Backup snaps
 if [ ! -d "/mnt/storage/backups/snaps" ]; then
@@ -112,6 +144,8 @@ if [ ! -d "/mnt/storage/backups/librespot" ]; then
 fi
 cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
 
+
+# Clean up
 # Cleanup old snap snapshots
 
 # 1. Get a list of all unique snap names that have saved snapshots
@@ -146,26 +180,32 @@ for s in $snaps; do
   done
 done
 
+# Cleanup Jellyfin Backups (Keep 3)
+ls -1 /var/snap/itrue-jellyfin/common/data/data/backups/jellyfin-backup-*.zip 2>/dev/null | sort | head -n -3 | xargs -I {} rm -f {}
+
 echo "Cleanup complete."
 
-# Cleanup exported snap backups
-# 1. Get a unique list of service names by:
-#    - Listing .zip files
-#    - Cutting the string at the underscores to get the second field
-#    - Sorting and getting unique values
-snaps=$(ls /mnt/storage/backups/snaps/*.zip | cut -d'_' -f2 | sort | uniq)
+# # Cleanup exported snap backups
+# # 1. Get a unique list of service names by:
+# #    - Listing .zip files
+# #    - Cutting the string at the underscores to get the second field
+# #    - Sorting and getting unique values
+# snaps=$(ls /mnt/storage/backups/snaps/*.zip | cut -d'_' -f2 | sort | uniq)
 
-echo "Found backups for: $(echo $snaps | xargs)"
-echo "----------------------------------------"
+# echo "Found backups for: $(echo $snaps | xargs)"
+# echo "----------------------------------------"
 
-for service in $snaps; do
-    echo "Processing $service..."
+# for service in $snaps; do
+#     echo "Processing $service..."
     
-    # List files for this service, sort newest first, skip top 3, delete rest
-    ls -1 /mnt/storage/backups/snaps/*_${service}_*.zip 2>/dev/null | sort -r | tail -n +4 | xargs -I {} rm -v {}
-done
+#     # List files for this service, sort newest first, skip top 3, delete rest
+#     ls -1 /mnt/storage/backups/snaps/*_${service}_*.zip 2>/dev/null | sort -r | tail -n +4 | xargs -I {} rm -v {}
+# done
 
-echo "Cleanup complete."
+
+# echo "Cleanup complete."
+
+
 
 
 # Sync to Proton Drive
