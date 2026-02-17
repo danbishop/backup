@@ -109,7 +109,7 @@ create_snapshot() {
   snap export-snapshot "$latest_save_id" "$final_path"
 }
 
-cleanup_snaps() {
+cleanup_snap_backups() {
   local backup_dir="/mnt/storage/backups/snaps"
   
   echo "Starting backup cleanup in $backup_dir..."
