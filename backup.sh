@@ -40,7 +40,7 @@ response=$(curl -s -o /dev/null -w "%{http_code}" \
     -H "Content-Type: application/json" \
     -H "Authorization: MediaBrowser Token=$JELLYFIN_API_KEY" \
     -d '{
-        "Metadata": true,
+        "Metadata": false,
         "Trickplay": false,
         "Subtitles": false,
         "Database": true
@@ -67,35 +67,73 @@ fi
 
 create_snapshot() {
   local snap_name="$1"
+  local backup_dir="/mnt/storage/backups/snaps"
 
   # Check if the argument is missing or empty
   if [[ -z "$snap_name" ]]; then
-    echo "Usage: get_latest_snapshot(snapname)"
+    echo "Usage: create_snapshot <snap_name>"
     return 1
   fi
 
-  snap save $snap_name
-  snapshot_data=$(snap saved --abs-time "$snap_name" | awk 'NR>1')
+  # 1. Create the snapshot
+  echo "Initialising snapshot for: $snap_name..."
+  snap save "$snap_name" || { echo "Error: snap save failed"; return 1; }
+
+  # 2. Capture and sort data
+  # We sort by the 3rd column (timestamp) numerically (-n) or as a general numeric sort (-g)
+  # then grab the most recent entry (the last line).
+  local snapshot_entry
+  snapshot_entry=$(snap saved --abs-time "$snap_name" | awk 'NR>1' | sort -k3,3n | tail -n 1)
+
+  if [[ -z "$snapshot_entry" ]]; then
+    echo "Error: Could not retrieve snapshot data."
+    return 1
+  fi
+
+  # 3. Extract ID and format filename
+  # Using read to split the line into variables for cleaner logic
+  local latest_save_id
+  latest_save_id=$(echo "$snapshot_entry" | awk '{print $1}')
   
-  # Get latest snapshot ID
-  # 1. Sort by the 3rd column (Timestamp)
-  # 2. Take the last line
-  # 3. Print the 1st column (ID)
-  latest_save_id=$(echo "$snapshot_data" | sort -k3,3 | tail -n 1 | awk '{print $1}')
+  # Generate a clean filename by replacing non-alphanumeric characters with underscores
+  # We take the first few columns to build the name, excluding the raw timestamp
+  local clean_name
+  clean_name=$(echo "$snapshot_entry" | awk '{print $1"_"$2}' | sed 's/[^a-zA-Z0-9_-]/_/g')
+
   echo "Snapshot ID: $latest_save_id"
 
-
-  # Get filename for export
-  export_filename=$(echo "$snapshot_data" | sort -k3,3 | tail -n 1 | awk '{
-      for(i=1; i<=NF-2; i++) {
-        printf "%s%s", $i, (i==NF-2 ? "" : "_")
-      }
-      print "" 
-    }' | sed 's/[^a-zA-Z0-9_-]\+/-/g')
-
-  # Export snapshot
-  snap export-snapshot $latest_save_id "/mnt/storage/backups/snaps/$snap_name_$export_filename.zip"
+  # 4. Export snapshot
+  local final_path="${backup_dir}/${snap_name}_${clean_name}.zip"
+  
+  echo "Exporting to $final_path..."
+  snap export-snapshot "$latest_save_id" "$final_path"
 }
+
+cleanup_snap_backups() {
+  local backup_dir="/mnt/storage/backups/snaps"
+  
+  echo "Starting backup cleanup in $backup_dir..."
+
+  # 1. Identify unique snapshot prefixes (everything before the first underscore)
+  # We look for .zip files and extract the snap_name part
+  local snap_names
+  snap_names=$(find "$backup_dir" -name "*.zip" -printf "%f\n" | cut -d'_' -f1 | sort -u)
+
+  for name in $snap_names; do
+    echo "Processing backups for: $name"
+
+    # 2. List files for this snap, sorted by modification time (newest first)
+    # We skip the first 3 lines (the most recent) and delete the rest
+    ls -t "$backup_dir/${name}_"*.zip 2>/dev/null | tail -n +4 | while read -r old_snap; do
+      echo "Deleting old backup: $old_snap"
+      rm "$old_snap"
+    done
+  done
+
+  echo "Cleanup complete."
+}
+
+cleanup_snap_backups
 
 # Backup Sonarr snap
 snap stop sonarr-tak
