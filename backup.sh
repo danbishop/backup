@@ -299,5 +299,5 @@ echo "Cleanup complete."
 # # Shutdown backups.danbishop.uk
 # ssh -t backups@backups.danbishop.uk 'sudo shutdown -h now'
 
-rclone sync --copy-links /mnt/storage/backups crypt:/backups
-rclone sync --copy-links /mnt/storage/nextcloud crypt:/backups/nextcloud
+rclone sync --copy-links /mnt/storage/backups crypt:/backups -P
+rclone sync --copy-links /mnt/storage/nextcloud crypt:/backups/nextcloud -P
