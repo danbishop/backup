@@ -139,8 +139,6 @@ cleanup_snap_backups() {
   echo "Cleanup complete."
 }
 
-cleanup_snap_backups
-
 # Backup Sonarr snap
 snap stop sonarr-tak
 create_snapshot "sonarr-tak"
@@ -191,6 +189,10 @@ cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
 
 # Clean up
 # Cleanup old snap snapshots
+
+# Delete old snap backups, keeping only the 3 most recent for each service
+cleanup_snap_backups
+
 
 # 1. Get a list of all unique snap names that have saved snapshots
 # We skip the header and grab the second column
@@ -298,4 +300,4 @@ echo "Cleanup complete."
 # ssh -t backups@backups.danbishop.uk 'sudo shutdown -h now'
 
 rclone sync --copy-links /mnt/storage/backups crypt:/backups
-rclone sync --copy-links /mnt/storage/nextcloud crypt:/backups
+rclone sync --copy-links /mnt/storage/nextcloud crypt:/backups/nextcloud
