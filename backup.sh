@@ -109,24 +109,30 @@ create_snapshot() {
   snap export-snapshot "$latest_save_id" "$final_path"
 }
 
-cleanup_snap_backups() {
+cleanup_snaps() {
   local backup_dir="/mnt/storage/backups/snaps"
   
   echo "Starting backup cleanup in $backup_dir..."
 
-  # 1. Identify unique snapshot prefixes (everything before the first underscore)
-  # We look for .zip files and extract the snap_name part
-  local snap_names
-  snap_names=$(find "$backup_dir" -name "*.zip" -printf "%f\n" | cut -d'_' -f1 | sort -u)
+  # 1. Extract unique service names
+  # This looks for the middle part of the filename (e.g., sonarr-tak, nextcloud)
+  # by removing the leading digits and trailing timestamp/extension logic.
+  local service_names
+  service_names=$(find "$backup_dir" -name "*.zip" -printf "%f\n" | \
+    sed -E 's/^[0-9]+_//; s/_[0-9]{4}-[0-9]{2}.*//; s/_[0-9]+_.*//' | sort -u)
 
-  for name in $snap_names; do
-    echo "Processing backups for: $name"
+  for service in $service_names; do
+    # Skip empty strings if any
+    [[ -z "$service" ]] && continue
 
-    # 2. List files for this snap, sorted by modification time (newest first)
-    # We skip the first 3 lines (the most recent) and delete the rest
-    ls -t "$backup_dir/${name}_"*.zip 2>/dev/null | tail -n +4 | while read -r old_snap; do
-      echo "Deleting old backup: $old_snap"
-      rm "$old_snap"
+    echo "Processing backups for: $service"
+
+    # 2. Find all files containing this service name
+    # Sort by modification time (newest first)
+    # Use 'tail -n +4' to target everything AFTER the 3 most recent files
+    ls -t "$backup_dir"/*"$service"* 2>/dev/null | tail -n +4 | while read -r old_file; do
+      echo "Deleting old backup: $old_file"
+      rm "$old_file"
     done
   done
 
