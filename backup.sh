@@ -301,3 +301,6 @@ echo "Cleanup complete."
 
 # rclone sync --copy-links /mnt/storage/backups crypt:/backups
 # rclone sync --copy-links /mnt/storage/nextcloud crypt:/backups
+
+# Backup to Garden
+restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/backups/
