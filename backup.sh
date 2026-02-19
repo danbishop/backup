@@ -40,7 +40,7 @@ response=$(curl -s -o /dev/null -w "%{http_code}" \
     -H "Content-Type: application/json" \
     -H "Authorization: MediaBrowser Token=$JELLYFIN_API_KEY" \
     -d '{
-        "Metadata": true,
+        "Metadata": false,
         "Trickplay": false,
         "Subtitles": false,
         "Database": true
@@ -67,34 +67,76 @@ fi
 
 create_snapshot() {
   local snap_name="$1"
+  local backup_dir="/mnt/storage/backups/snaps"
 
   # Check if the argument is missing or empty
   if [[ -z "$snap_name" ]]; then
-    echo "Usage: get_latest_snapshot(snapname)"
+    echo "Usage: create_snapshot <snap_name>"
     return 1
   fi
 
-  snap save $snap_name
-  snapshot_data=$(snap saved --abs-time "$snap_name" | awk 'NR>1')
+  # 1. Create the snapshot
+  echo "Initialising snapshot for: $snap_name..."
+  snap save "$snap_name" || { echo "Error: snap save failed"; return 1; }
+
+  # 2. Capture and sort data
+  # We sort by the 3rd column (timestamp) numerically (-n) or as a general numeric sort (-g)
+  # then grab the most recent entry (the last line).
+  local snapshot_entry
+  snapshot_entry=$(snap saved --abs-time "$snap_name" | awk 'NR>1' | sort -k3,3n | tail -n 1)
+
+  if [[ -z "$snapshot_entry" ]]; then
+    echo "Error: Could not retrieve snapshot data."
+    return 1
+  fi
+
+  # 3. Extract ID and format filename
+  # Using read to split the line into variables for cleaner logic
+  local latest_save_id
+  latest_save_id=$(echo "$snapshot_entry" | awk '{print $1}')
   
-  # Get latest snapshot ID
-  # 1. Sort by the 3rd column (Timestamp)
-  # 2. Take the last line
-  # 3. Print the 1st column (ID)
-  latest_save_id=$(echo "$snapshot_data" | sort -k3,3 | tail -n 1 | awk '{print $1}')
+  # Generate a clean filename by replacing non-alphanumeric characters with underscores
+  # We take the first few columns to build the name, excluding the raw timestamp
+  local clean_name
+  clean_name=$(echo "$snapshot_entry" | awk '{print $1"_"$2}' | sed 's/[^a-zA-Z0-9_-]/_/g')
+
   echo "Snapshot ID: $latest_save_id"
 
+  # 4. Export snapshot
+  local final_path="${backup_dir}/${snap_name}_${clean_name}.zip"
+  
+  echo "Exporting to $final_path..."
+  snap export-snapshot "$latest_save_id" "$final_path"
+}
 
-  # Get filename for export
-  export_filename=$(echo "$snapshot_data" | sort -k3,3 | tail -n 1 | awk '{
-      for(i=1; i<=NF-2; i++) {
-        printf "%s%s", $i, (i==NF-2 ? "" : "_")
-      }
-      print "" 
-    }' | sed 's/[^a-zA-Z0-9_-]\+/-/g')
+cleanup_snap_backups() {
+  local backup_dir="/mnt/storage/backups/snaps"
+  
+  echo "Starting backup cleanup in $backup_dir..."
 
-  # Export snapshot
-  snap export-snapshot $latest_save_id "/mnt/storage/backups/snaps/$snap_name_$export_filename.zip"
+  # 1. Extract unique service names
+  # This looks for the middle part of the filename (e.g., sonarr-tak, nextcloud)
+  # by removing the leading digits and trailing timestamp/extension logic.
+  local service_names
+  service_names=$(find "$backup_dir" -name "*.zip" -printf "%f\n" | \
+    sed -E 's/^[0-9]+_//; s/_[0-9]{4}-[0-9]{2}.*//; s/_[0-9]+_.*//' | sort -u)
+
+  for service in $service_names; do
+    # Skip empty strings if any
+    [[ -z "$service" ]] && continue
+
+    echo "Processing backups for: $service"
+
+    # 2. Find all files containing this service name
+    # Sort by modification time (newest first)
+    # Use 'tail -n +4' to target everything AFTER the 3 most recent files
+    ls -t "$backup_dir"/*"$service"* 2>/dev/null | tail -n +4 | while read -r old_file; do
+      echo "Deleting old backup: $old_file"
+      rm "$old_file"
+    done
+  done
+
+  echo "Cleanup complete."
 }
 
 # Backup Sonarr snap
@@ -147,6 +189,10 @@ cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
 
 # Clean up
 # Cleanup old snap snapshots
+
+# Delete old snap backups, keeping only the 3 most recent for each service
+cleanup_snap_backups
+
 
 # 1. Get a list of all unique snap names that have saved snapshots
 # We skip the header and grab the second column
@@ -253,5 +299,5 @@ echo "Cleanup complete."
 # # Shutdown backups.danbishop.uk
 # ssh -t backups@backups.danbishop.uk 'sudo shutdown -h now'
 
-#rclone sync --copy-links /mnt/storage/backups crypt:/
-#rclone sync --copy-links /mnt/storage/nextcloud crypt:/
+rclone sync --copy-links /mnt/storage/backups crypt:/backups
+rclone sync --copy-links /mnt/storage/nextcloud crypt:/backups
