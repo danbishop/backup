@@ -304,3 +304,7 @@ echo "Cleanup complete."
 
 # Backup to Garden
 restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/backups/
+restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/nextcloud/
+
+# Cleanup Restic Repo - only keeep last 3 snapshots
+restic -r sftp:localadmin@garden.danbishop.uk:/backup forget --keep-last 3 --prune
