@@ -303,11 +303,15 @@ echo "Cleanup complete."
 # rclone sync --copy-links /mnt/storage/nextcloud crypt:/backups
 
 # Backups to Garden
-restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/backups/
-restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/nextcloud/
+restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/backups
+restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/nextcloud
+restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/books
+restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/immich
+
 
 # Backups to Oracle Cloud
 restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/storage/immich
+restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/storage/books
 
 
 # Cleanup Restic Repos - only keeep last 3 snapshots
