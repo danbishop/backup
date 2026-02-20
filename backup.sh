@@ -316,4 +316,4 @@ restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/st
 
 # Cleanup Restic Repos - only keeep last 3 snapshots
 restic -r sftp:localadmin@garden.danbishop.uk:/backup forget --keep-last 3 --prune
-restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --keep-last 3 --prune
+restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup forget --keep-last 3 --prune
