@@ -308,11 +308,11 @@ restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/stor
 restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/books
 restic -r sftp:localadmin@garden.danbishop.uk:/backup --verbose backup /mnt/storage/immich
 
-
 # Backups to Oracle Cloud
-restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/storage/immich
+restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/storage/backups
+restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/storage/nextcloud
 restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/storage/books
-
+restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/storage/immich
 
 # Cleanup Restic Repos - only keeep last 3 snapshots
 restic -r sftp:localadmin@garden.danbishop.uk:/backup forget --keep-last 3 --prune
