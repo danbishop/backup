@@ -315,5 +315,5 @@ restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/st
 restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/storage/immich
 
 # Cleanup Restic Repos - applying keep policies
-restic -r sftp:localadmin@garden.danbishop.uk:/backup forget --keep-monthly 1 --keep-weekly 1 --keep-last 3 --prune
-restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup forget --keep-monthly 1 --keep-weekly 1 --keep-last 3 --prune
+restic -r sftp:localadmin@garden.danbishop.uk:/backup forget --keep-monthly 1 --keep-weekly 2 --keep-daily 7 --prune
+restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup forget --keep-monthly 1 --keep-weekly 2 --keep-daily 7 --prune
