@@ -169,10 +169,10 @@ snap stop nextcloud
 create_snapshot "nextcloud"
 snap start nextcloud
 
-# Backup Booklore Snap
-snap stop booklore
-create_snapshot "booklore"
-snap start booklore
+# Backup Grimmory Snap
+snap stop grimmory
+create_snapshot "grimmory"
+snap start grimmory
 
 # Backup Immich Snap - Don't do this... entire photo library is mounted inside the snap
 # snap stop immich-distribution
