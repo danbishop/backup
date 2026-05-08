@@ -174,6 +174,11 @@ snap stop grimmory
 create_snapshot "grimmory"
 snap start grimmory
 
+# Backup Mealie Snap
+snap stop mealie
+create_snapshot "mealie"
+snap start mealie
+
 # Backup Immich Snap - Don't do this... entire photo library is mounted inside the snap
 # snap stop immich-distribution
 # create_snapshot "immich-distribution"
