@@ -40,9 +40,9 @@ response=$(curl -s -o /dev/null -w "%{http_code}" \
     -H "Content-Type: application/json" \
     -H "Authorization: MediaBrowser Token=$JELLYFIN_API_KEY" \
     -d '{
-        "Metadata": false,
-        "Trickplay": false,
-        "Subtitles": false,
+        "Metadata": true,
+        "Trickplay": true,
+        "Subtitles": true,
         "Database": true
     }')
 
