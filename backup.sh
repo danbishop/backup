@@ -179,17 +179,7 @@ snap stop mealie
 create_snapshot "mealie"
 snap start mealie
 
-# Backup Immich Snap - Don't do this... entire photo library is mounted inside the snap
-# snap stop immich-distribution
-# create_snapshot "immich-distribution"
-# snap start immich-distribution
-
 # rsync -a --delete /var/lib/snapd/snapshots /mnt/storage/backups/snaps/
- # Backup Librespot
-if [ ! -d "/mnt/storage/backups/librespot" ]; then
-  mkdir -p /mnt/storage/backups/librespot
-fi
-cp -a /var/cache/librespot/credentials.json /mnt/storage/backups/librespot/
 
 
 # Clean up
