@@ -309,6 +309,13 @@ restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/st
 restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/storage/books
 restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup --verbose backup /mnt/storage/immich
 
+# Backups to Proton Drive
+restic -r rclone:protondrive:restic-repo --verbose backup /mnt/storage/backups
+restic -r rclone:protondrive:restic-repo --verbose backup /mnt/storage/nextcloud
+restic -r rclone:protondrive:restic-repo --verbose backup /mnt/storage/books
+restic -r rclone:protondrive:restic-repo --verbose backup /mnt/storage/immich
+
 # Cleanup Restic Repos - applying keep policies
 restic -r sftp:localadmin@garden.danbishop.uk:/backup forget --keep-last 3 --prune
 restic -r sftp:ubuntu@oraclebackup.danbishop.uk:/backup forget --keep-last 3 --prune
+restic -r rclone:protondrive:restic-repo forget --keep-last 3 --prune
