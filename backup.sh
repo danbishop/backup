@@ -314,6 +314,7 @@ restic -r rclone:protondrive:restic-repo --verbose backup /mnt/storage/backups
 restic -r rclone:protondrive:restic-repo --verbose backup /mnt/storage/nextcloud
 restic -r rclone:protondrive:restic-repo --verbose backup /mnt/storage/books
 restic -r rclone:protondrive:restic-repo --verbose backup /mnt/storage/immich
+restic -r rclone:protondrive:restic-repo --verbose backup /mnt/storage/music
 
 # Cleanup Restic Repos - applying keep policies
 restic -r sftp:localadmin@garden.danbishop.uk:/backup forget --keep-last 3 --prune
